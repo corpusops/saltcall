@@ -1,2 +1,24 @@
----
+galaxy_info:
+  author: Mathieu Le Marec - Pasquet <kiorky@cryptelium.net>
+  description: |
+    corpusops.saltcall
+  company: corpusOps
+  issue_tracker_url: |
+    https://github.com/corpusops/corpusops.saltcall/issues/new
+  namespace: corpusops
+  license: BSD
+  min_ansible_version: 2.0
+  github_branch: master
+  platforms:
+  - name: GenericLinux
+    versions:
+    - all
+    - any
+  - name: Ubuntu
+    versions:
+    - all
+  - name: Debian
+    versions:
+    - all
+  galaxy_tags: [corpusops, corpusops_roles]
 dependencies: []
