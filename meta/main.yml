@@ -1,10 +1,10 @@
 galaxy_info:
   author: Mathieu Le Marec - Pasquet <kiorky@cryptelium.net>
   description: |
-    corpusops_saltcall
+    corpusops.saltcall
   company: corpusOps
   issue_tracker_url: |
-    https://github.com/corpusops/corpusops_saltcall/issues/new
+    https://github.com/corpusops/saltcall/issues/new
   namespace: corpusops
   license: BSD
   min_ansible_version: 2.0
