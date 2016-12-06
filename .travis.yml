@@ -19,34 +19,32 @@ install:
      sudo docker pull "$img"
     done
   - |
-    cat > copstest_test.sh << TEOF
-    #!/usr/bin/env bash
-    cd /srv/corpusops/corpusops.bootstrap
-    if ! hacking/test_roles "$PWD";then
-      echo "First test try failed, try to update code and retry test" >&2
-      bin/install.sh -s
-      hacking/test_roles "$PWD"
-    fi
-    TEOF
-    #
-  - cat copstest_test.sh
-  - chmod +x copstest_*.sh
-  - |
     set -e;
     docker=$(which docker)
     sudo docker run -d --name=copstestrunner \
-       $( while read v; do echo " -v ${v}:${v}:ro";done < \
-               <( ldd "${docker}"|awk '{print $3}'|egrep '^/'; )
-       )\
-       -v "${docker}:${docker}" \
-       -v "/sys/fs/cgroup:/sys/fs/cgroup:ro" \
-       -v "/var/lib/docker:/var/lib/docker" \
-       -v "/var/run/docker:/var/run/docker" \
-       -v "/var/run/docker.sock:/var/run/docker.sock" \
-       -v "/:/HOST_ROOTFS" \
-       -v "$PWD:$PWD" \
-       -e IMAGES="$IMAGES" \
-       "corpusops/ubuntu:14.04" bash -c 'while true;do sleep 65200;done'
+      $( while read v; do echo " -v ${v}:${v}:ro";done < \
+              <( ldd "${docker}"|awk '{print $3}'|egrep '^/'; )
+      )\
+      -v "${docker}:${docker}" \
+      -v "/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+      -v "/var/lib/docker:/var/lib/docker" \
+      -v "/var/run/docker:/var/run/docker" \
+      -v "/var/run/docker.sock:/var/run/docker.sock" \
+      -v "/:/HOST_ROOTFS" \
+      -v "$PWD:$PWD" \
+      -e IMAGES="$IMAGES" \
+      "corpusops/ubuntu:14.04" bash -c 'while true;do sleep 65200;done'
 script:
-  - sudo docker exec copstestrunner bash -c "$PWD/copstest_test.sh"
+  - |
+    role=$(pwd)
+    set -ex
+    sudo docker exec copstestrunner bash -c \
+    "
+    cd /srv/corpusops/corpusops.bootstrap
+    if ! hacking/test_roles "'"'"${role}"'"'"; then
+      echo 'First test try failed, try to update code and retry test' >&2
+      bin/install.sh -s
+      hacking/test_roles "'"'"${role}"'"'"
+    fi
+    "
 
