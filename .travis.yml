@@ -3,9 +3,9 @@ sudo: required
 dist: trusty
 env:
   matrix:
-    - IMAGES="ubuntu:16.04_preprovision"
-    - IMAGES="ubuntu:14.04_preprovision"
-    - IMAGES="ubuntu:latest_preprovision"
+    - FORCE_REPULL="y" IMAGES="ubuntu:16.04_preprovision"
+    - FORCE_REPULL="y" IMAGES="ubuntu:14.04_preprovision"
+    - FORCE_REPULL="y" IMAGES="ubuntu:latest_preprovision"
 language: python
 python: "2.7"
 before_install:
@@ -35,16 +35,49 @@ install:
       -e IMAGES="$IMAGES" \
       "corpusops/ubuntu:14.04" bash -c 'while true;do sleep 65200;done'
 script:
+  # Either test on docker if possible
+  # Or directly on travis compute node
   - |
+    if [ -e .travis.env ];then . .travis.env;fi
+    co=/srv/corpusops/corpusops.bootstrap
     role=$(pwd)
-    set -ex
-    sudo docker exec copstestrunner bash -c \
-    "
-    cd /srv/corpusops/corpusops.bootstrap
-    if ! hacking/test_roles "'"'"${role}"'"'"; then
-      echo 'First test try failed, try to update code and retry test' >&2
-      bin/install.sh -s
-      hacking/test_roles "'"'"${role}"'"'"
+    rolename=$(basename $role)
+    cd ..
+    roles=$(pwd)
+    roled=$(basename $roles)
+    if echo $rolesd | egrep -q '^roles?';then cd ..;fi
+    ret=666
+    set +e
+    set -x
+    if [ "x${NO_DOCKER_TEST-}" = "x" ]; then
+      if ! sudo docker exec copstestrunner bash -c \
+       "
+       if ! $co/hacking/test_roles "'"'"${role}"'"'"; then
+         echo 'First test try failed, try to update code and retry test' >&2;
+         $co/bin/install.sh -s && $co/hacking/test_roles "'"'"${role}"'"'"
+       fi"; then
+        ret=1;
+      else
+        ret=0;
+      fi
+    else
+      echo 'NO_DOCKER_TEST is set, skip tests in docker' >&2
     fi
-    "
-
+    if [ "x${ret}" != "x0" ]; then
+      if ! ( sudo docker cp copstestrunner:/srv/corpusops /srv/corpusops && sudo $co/bin/install.sh -C -S; ); then
+        ret=3
+      else
+        if ! sudo $co/hacking/test_roles "${role}"; then
+          echo 'BM: First test try failed, try to update code and retry test' >&2;
+          sudo $co/bin/install.sh -s;
+          if ! sudo $co/hacking/test_roles "${role}";then
+            ret=2;
+          else
+            ret=0;
+          fi
+        else
+          ret=0;
+        fi
+      fi
+    fi
+    exit ${ret}
