@@ -371,7 +371,7 @@ def main():
         if ret['retcode'] == 0:
             ret['stderr'] = '<TRIMMED>'
     if ret['retcode'] == 0:
-        module.exit_json(changed=changed, msg=ret)
+        module.exit_json(changed=changed, result=ret)
     else:
         module.fail_json(msg={'msg': 'saltcallerror', 'result': ret})
 
