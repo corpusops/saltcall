@@ -1,0 +1,9 @@
+- hosts: all
+  roles:
+    - role: corpusops.humanlog
+    - role: corpusops.saltcall
+- hosts: all
+  tasks:
+    - saltcall:
+        function: cmd.run
+        args: '"echo foo"'
